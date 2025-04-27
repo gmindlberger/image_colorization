@@ -1,0 +1,26 @@
+Image Colorization with Autoencoder
+
+This project implements a neural network for automatic colorization of grayscale images. It uses architectures like UNet and UNetRes to enhance image quality.
+
+## Project Overview
+
+The goal of this project is to convert grayscale images into color images. A dataset of landscape images, downloaded from Kaggle, is used for training. The model is trained using a custom dataset and a PyTorch DataLoader.
+
+## Technologies Used
+
+- **Programming Language**: Python
+- **Frameworks**: PyTorch, torchvision, NumPy, Matplotlib
+- **Additional Tools**: Kaggle API, PIL, tqdm
+
+## Project Structure
+
+- `data_prep.ipynb`: Script for preparing and renaming image files.
+- `autoencoder.ipynb`: Main script for training and evaluating the model.
+- `neuronal_networks_ic.py`, `neuronal_networks_unet.py`, etc.: Implementations of different model architectures.
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd <repository-name>
