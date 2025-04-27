@@ -67,3 +67,26 @@ class Trainer:
         plt.legend()
         plt.grid(True)
         plt.show()
+
+    def show_examples(self, loader, n_display=5):
+        """Zeigt n_display Beispiele aus einem DataLoader."""
+        self.model.eval()
+        with torch.no_grad():
+            gray_batch, true_color_batch = next(iter(loader))
+            gray_batch = gray_batch.to(self.device)
+            pred_batch = self.model(gray_batch).cpu()
+
+        fig, axes = plt.subplots(n_display, 3, figsize=(12, 4 * n_display))
+        for i in range(n_display):
+            axes[i, 0].imshow(gray_batch[i].cpu().squeeze(), cmap='gray')
+            axes[i, 0].set_title('Input (Gray)');
+            axes[i, 0].axis('off')
+            axes[i, 1].imshow(pred_batch[i].permute(1, 2, 0))
+            axes[i, 1].set_title('Predicted');
+            axes[i, 1].axis('off')
+            axes[i, 2].imshow(true_color_batch[i].permute(1, 2, 0))
+            axes[i, 2].set_title('Ground Truth');
+            axes[i, 2].axis('off')
+        plt.tight_layout()
+        plt.show()
+
