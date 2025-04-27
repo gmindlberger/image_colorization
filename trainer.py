@@ -10,12 +10,12 @@ class Trainer:
                  criterion,
                  optimizer,
                  device: torch.device):
-        self.model        = model
+        self.device = device
+        self.model        = model.to(device)
         self.train_loader = train_loader
         self.val_loader   = val_loader
         self.criterion    = criterion
         self.optimizer    = optimizer
-        self.device       = device
 
         # Verlaufs‐Logs
         self.history = {
