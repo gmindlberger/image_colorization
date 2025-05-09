@@ -16,7 +16,7 @@ The goal of this project is to convert grayscale images into color images. A dat
 
 - `data_prep.ipynb`: Script for preparing and renaming image files.
 - `autoencoder.ipynb`: Main script for training and evaluating the model.
-- `neuronal_networks_ic.py`, `neuronal_networks_unet.py`, etc.: Implementations of different model architectures.
+- `neuronal_nets`: Implementations of different model architectures.
 
 ## Installation
 
@@ -24,3 +24,19 @@ The goal of this project is to convert grayscale images into color images. A dat
    ```bash
    git clone <repository-url>
    cd <repository-name>
+
+
+ TODO
+1. Baseline: Regression
+2. Hyperparameter Tuning: Grid-Search einbauen --> Check!
+3. Dokumentation anhand CRISP DM - Lifecycle
+	3.1 definiert selbst Problemstellung, Datensatz und Methoden
+	3.2 Use-Case: ältere Mitmenschen
+
+Crisp DM lifecycle:
+1. Business Understanding
+2. Data Understanding
+3. Data Preparation
+4. Modelling
+5. Evaluation
+6. Deployment

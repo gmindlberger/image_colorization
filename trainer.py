@@ -48,9 +48,16 @@ class Trainer:
         return running / len(self.val_loader.dataset)
 
     def fit(self, num_epochs: int):
+        best_val_loss = float('inf')
         for epoch in range(1, num_epochs+1):
             train_loss = self.train_epoch()
             val_loss   = self.validate_epoch()
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                torch.save(
+                    self.model.state_dict(),
+                    f"best_model_save.pth"
+                )
             self.history['train_loss'].append(train_loss)
             self.history['val_loss'].append(val_loss)
             print(f'Epoch {epoch}/{num_epochs} — '
