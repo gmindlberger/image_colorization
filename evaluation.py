@@ -33,7 +33,6 @@ def evaluate_ssim(model, loader, device, n=20):
         Der SSIM-Wert (Structural Similarity Index) misst, wie ähnlich zwei Bilder in ihrer Struktur sind.
         Relevante Indikatoren hierfür sind Helligkeit (Luminanz), Kontrast und Struktur (z.B. Kanten und Muster).
 
-        -> Der SSIM-Wert kann nicht auf 1 kommen, da wir die Pixel Anzahl reduziert haben.
     """
     model.to(device).eval()
     total, count = 0, 0

@@ -17,7 +17,7 @@ class ImageColorizerLAB(nn.Module):
 
     Args:
         in_channels:   Anzahl der Eingangskanäle (z.B. 1 für L, 3 für L+A+B)
-        out_channels:  Anzahl der Ausgabe­kanäle (z.B. 2 für A+B, 3 für L+A+B)
+        out_channels:  Anzahl der Ausgabekanäle (z.B. 2 für A+B, 3 für L+A+B)
     """
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()

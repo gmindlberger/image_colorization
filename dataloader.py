@@ -14,17 +14,17 @@ class ImageColorizerDataset(Dataset):
             if f.lower().endswith('.jpg')
         ])
 
-        # L bleibt in [0,1]
+        # L bleibt in [0,1] // transformierung für L-Kanal
         self.transform_L = transforms.Compose([
             transforms.Resize((img_height, img_width)),
             transforms.ToTensor(),   # skaliert 0–255 → 0.0–1.0
         ])
 
-        # AB wird durch OpenCV schon auf 0–255 verschoben
-        # → ToTensor() skaliert also automatisch (AB+128)/255 → 0.0–1.0
+        # AB bleibt in [0,1] // transformierung für AB-Kanäle
+        # ToTensor() skaliert also automatisch (AB+128)/255 → 0.0–1.0
         self.transform_AB = transforms.Compose([
             transforms.Resize((img_height, img_width)),
-            transforms.ToTensor(),   # skaliert 0–255 → 0.0–1.0
+            transforms.ToTensor(),
         ])
 
     def __len__(self):
@@ -36,12 +36,12 @@ class ImageColorizerDataset(Dataset):
         img_bgr = cv2.imread(path)
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-        # RGB → LAB; OpenCV-LAB ist 0–255, A/B sind automatisch um +128 verschoben
+        # RGB -> LAB; OpenCV-LAB ist 0–255, A/B sind automatisch um +128 verschoben
         img_lab = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2LAB)
         L, A, B = cv2.split(img_lab)
 
         # PIL-Images erzeugen
-        L_img  = Image.fromarray(L).convert('L')                              # 1-Channel
+        L_img  = Image.fromarray(L).convert('L')                             # 1-Channel
         AB_img = Image.fromarray(np.stack([A, B], axis=2).astype(np.uint8))  # 2-Channel
 
         # Transforms anwenden

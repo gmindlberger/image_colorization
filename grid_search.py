@@ -8,8 +8,11 @@ from trainer import Trainer
 from dataloader import ImageColorizerDataset
 from neural_nets import ImageColorizerLAB
 
+# Dieser Grid Search code ist im Grunde nur eine Kopie des OriginalCodes in AutoColorization.ipynb
+# Allerdings ist es bewusst vollständig ausgelagert - Dementsprechend auch hier keine weiteren Details
 
 def run_grid_search(
+
     image_path: str,
     grid: dict,
     device: torch.device = None,

@@ -30,7 +30,7 @@ Schritte:
 1. Download per kagglehub
 2. Dateien einheitlich umbenennen (001.jpg, 002.jpg, …)
 3. PyTorch-Dataset ImageColorizerDataset erstellt
-4. LAB-Konvertierung: L-Kanal als Input, AB-Kanäle als Ziel
+4. LAB-Konvertierung: L-Kanal als Input, AB-Kanäle als Ziel; L-Kanal ist der Gray-Scale und AB-Kanäle sind die Farbkanäle
 5. Visual-Checks (Shapes & Wertebereiche) und Grid-Preview
 
 ## Modelling
@@ -58,10 +58,6 @@ Zusätzlicher Upload als .zip File auf Moodle
 - Frameworks: PyTorch, NumPy, Matplotlib, Pandas, OpenCV, SKImage, tqdm, PIL, Kaggle API
 
 ## Project Structure
-- `data_prep.ipynb`: Script for preparing and renaming image files.
-- `autoencoder.ipynb`: Main script for training and evaluating the model.
-- `neuronal_nets`: Implementations of different model architectures.
-
 ├── dataloader.py     # Dataset-Klasse (LAB-Konvertierung)
 ├── evaluation.py     # PSNR, SSIM, CIEDE2000
 ├── grid_search.py    # Hyperparameter-Search & Visualisierung
