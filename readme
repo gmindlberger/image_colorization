@@ -1,39 +1,9 @@
-Image Colorization with Autoencoder
+Auto-Colorizer für Landschaftsbilder (von Gabriel²; Mindlberger und Kraljic)
 
-This project implements a neural network for automatic colorization of grayscale images. It uses architectures like UNet and UNetRes to enhance image quality.
+Ein auf Deep Learning basierendes Tool zur automatischen Kolorierung und Restauration von Schwarz-Weiß-Fotos.
+Besonders geeignet, um Erinnerungen für ältere Menschen mit kognitiven Einschränkungen (z.B. Demenz) wieder lebendig werden zu lassen.
 
-## Project Overview
-
-The goal of this project is to convert grayscale images into color images. A dataset of landscape images, downloaded from Kaggle, is used for training. The model is trained using a custom dataset and a PyTorch DataLoader.
-
-## Technologies Used
-
-- **Programming Language**: Python
-- **Frameworks**: PyTorch, torchvision, NumPy, Matplotlib
-- **Additional Tools**: Kaggle API, PIL, tqdm
-
-## Project Structure
-
-- `data_prep.ipynb`: Script for preparing and renaming image files.
-- `autoencoder.ipynb`: Main script for training and evaluating the model.
-- `neuronal_nets`: Implementations of different model architectures.
-
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd <repository-name>
-
-
- TODO
-1. Baseline: Regression
-2. Hyperparameter Tuning: Grid-Search einbauen --> Check!
-3. Dokumentation anhand CRISP DM - Lifecycle
-	3.1 definiert selbst Problemstellung, Datensatz und Methoden
-	3.2 Use-Case: ältere Mitmenschen
-
-Crisp DM lifecycle:
+## Inhaltsverzeichnis
 1. Business Understanding
 2. Data Understanding
 3. Data Preparation
@@ -41,6 +11,63 @@ Crisp DM lifecycle:
 5. Evaluation
 6. Deployment
 
-Jedes Modell 10x Epochen laufen lassen -> Screenshots abspeichern
-Einen Score einbauen um es mit Testdaten zu vergleichen (Vergleichsscore für colorierte Bilder)
--> Diese dann speichern und das beste Modell dann auf 60 Epochen stellen.
+## Business Understanding:
+Zielgruppe: Senior mit eingeschränktem Farb- und Bildverständnis (z.B. Demenz)
+Problem: Historische Schwarz-Weiß-Bilder sind schwer erkennbar und verlieren emotionale Wirkung.
+Zielgruppe: Historiker zur restauration von Bildern
+Problem: Historische Schwarz-Weiß-Bilder könnten ausgebleicht oder schon beschädigt sein (z.B. abblätternder Farbe).
+Lösung: Automatische Kolorierung zur Restauration (zur Steigerung der visuellen Klarheit und emotionalen Ansprache).
+
+## Data Understanding
+Quelle: Kaggle-Datensatz (User: arnaud58 Name: landscape-pictures)
+Dateiformat: JPG
+Auflösung: Variierend, Zielskalierung auf max. 180x180 px (Aufgrund der GPU-Ressourcen)
+Merkmale: Natürliche Landschaften – Fokus auf Farben, Kontrast
+Erste Analysen: siehe data_inspection.ipynb (Dateianzahl, Größenverteilung, etc.)
+
+## Data Preparation
+Schritte:
+1. Download per kagglehub
+2. Dateien einheitlich umbenennen (001.jpg, 002.jpg, …)
+3. PyTorch-Dataset ImageColorizerDataset erstellt
+4. LAB-Konvertierung: L-Kanal als Input, AB-Kanäle als Ziel
+5. Visual-Checks (Shapes & Wertebereiche) und Grid-Preview
+
+## Modelling
+Implementierte Architekturen (neuronal_nets):
+Klassischer Autoencoder (ImageColorizer, ImageSuperRes, ImageColorizerLab)
+Autoencoder mit vortrainierten Gewichten (ColorizeNet)
+U-Net (UNet)
+U-Net mit ResidualBlock (UNetRes)
+Hyperparameter: Bildgröße, Lernrate, Batch-Size, Epochen
+Trainierte Modelle wurden jeweils gespeichert. Das beste Modell wurde zusätzlich für 60 Epochen trainiert.
+Optimierung: Grid-Search
+
+## Evaluation
+Quantitative Metriken: Loss-Functions (Validation und Training)
+    weitere Evaluation (evaluation.py): PSNR (Peak Signal-to-Noise Ratio), SSIM (Structural Similarity Index)
+    Zusätzlich folgte CIEDE2000, weil PSNR und SSIM für uns nicht Aussagekräftig genug waren.
+Qualitative Checks: Manuelle Gegenüberstellung Original vs. Kolorierung
+
+## Deployment:
+Git-Hub-Repository für Code und Dokumentation
+Zusätzlicher Upload als .zip File auf Moodle
+
+## Technologies Used
+- Programming Language: Python
+- Frameworks: PyTorch, NumPy, Matplotlib, Pandas, OpenCV, SKImage, tqdm, PIL, Kaggle API
+
+## Project Structure
+- `data_prep.ipynb`: Script for preparing and renaming image files.
+- `autoencoder.ipynb`: Main script for training and evaluating the model.
+- `neuronal_nets`: Implementations of different model architectures.
+
+├── dataloader.py     # Dataset-Klasse (LAB-Konvertierung)
+├── evaluation.py     # PSNR, SSIM, CIEDE2000
+├── grid_search.py    # Hyperparameter-Search & Visualisierung
+├── neural_nets.py    # Modell-Definitionen
+├── trainer.py        # Training, Validierung
+└── notebooks/
+    └── autoencoder.ipynb       # Interaktive Pipeline
+    └── data_inspection.ipynb   # Datenüberblick
+Additional directorys and files: Gespeichertes Modell, Bewertung der Daten, Graphen der Daten und Beispielbilder
