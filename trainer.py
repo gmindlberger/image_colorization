@@ -87,7 +87,7 @@ class Trainer:
         plt.grid(True)
         plt.show()
 
-    def show_examples(self, loader=None, n_display=5):
+    def show_examples(self, loader=None, n_display=3):
         if loader is None:
             loader = self.val_loader if self.validate and self.val_loader is not None else self.train_loader
 

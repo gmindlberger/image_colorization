@@ -40,3 +40,7 @@ Crisp DM lifecycle:
 4. Modelling
 5. Evaluation
 6. Deployment
+
+Jedes Modell 10x Epochen laufen lassen -> Screenshots abspeichern
+Einen Score einbauen um es mit Testdaten zu vergleichen (Vergleichsscore für colorierte Bilder)
+-> Diese dann speichern und das beste Modell dann auf 60 Epochen stellen.

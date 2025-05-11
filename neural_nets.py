@@ -194,14 +194,14 @@ class UNet(nn.Module):
         self.up   = nn.Upsample(scale_factor=2, mode='nearest')
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        e1 = self.enc1(x)
-        e2 = self.enc2(self.pool(e1))
-        e3 = self.enc3(self.pool(e2))
-        b  = self.bottleneck(self.pool(e3))
-        d3 = self.dec3(torch.cat([self.up(b), e3], dim=1))
-        d2 = self.dec2(torch.cat([self.up(d3), e2], dim=1))
-        d1 = self.dec1(torch.cat([self.up(d2), e1], dim=1))
-        return torch.sigmoid(self.final(d1))
+        e1 = self.enc1(x) # -> (B, 64, 128, 128)
+        e2 = self.enc2(self.pool(e1)) # -> (B, 128, 64, 64)
+        e3 = self.enc3(self.pool(e2)) # -> (B, 256, 32, 32)
+        b  = self.bottleneck(self.pool(e3)) # -> (B, 512, 16, 16)
+        d3 = self.dec3(torch.cat([self.up(b), e3], dim=1)) # (B, 256, 32, 32)
+        d2 = self.dec2(torch.cat([self.up(d3), e2], dim=1)) # (B, 128, 64, 64)
+        d1 = self.dec1(torch.cat([self.up(d2), e1], dim=1)) # (B, 64, 128, 128)
+        return torch.sigmoid(self.final(d1)) # -> (B, out_channels, 128, 128)
 
 
 ######################################################
@@ -278,69 +278,61 @@ class UNetRes(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Encoder path
-        x = self.init_conv(x)
-        e1 = self.enc1(x)
-        e2 = self.enc2(self.enc2_map(self.pool(e1)))
-        e3 = self.enc3(self.enc3_map(self.pool(e2)))
-        b  = self.bottleneck(self.bottle_map(self.pool(e3)))
+        x = self.init_conv(x) # -> (B, 64, 128, 128)
+        e1 = self.enc1(x) # -> (B, 64, 128, 128)
+        e2 = self.enc2(self.enc2_map(self.pool(e1))) # -> (B, 128, 64, 64)
+        e3 = self.enc3(self.enc3_map(self.pool(e2))) # -> (B, 256, 32, 32)
+        b  = self.bottleneck(self.bottle_map(self.pool(e3))) # -> (B, 512, 16, 16)
 
         # Decoder path with skip connections
-        d3 = torch.cat([self.up(b), e3], dim=1)
-        d3 = self.dec3(self.reduce3(d3))
-        d2 = torch.cat([self.up(d3), e2], dim=1)
-        d2 = self.dec2(self.reduce2(d2))
-        d1 = torch.cat([self.up(d2), e1], dim=1)
-        d1 = self.dec1(self.reduce1(d1))
+        d3 = torch.cat([self.up(b), e3], dim=1) # (B, 512 + 256 = 768, 32, 32)
+        d3 = self.dec3(self.reduce3(d3)) # -> (B, 256, 32, 32)
+        d2 = torch.cat([self.up(d3), e2], dim=1) # (B, 256 + 128 = 384, 64, 64)
+        d2 = self.dec2(self.reduce2(d2)) # -> (B, 128, 64, 64)
+        d1 = torch.cat([self.up(d2), e1], dim=1) # (B, 128 + 64 = 192, 128, 128)
+        d1 = self.dec1(self.reduce1(d1)) # -> (B, 64, 128, 128)
 
         # Output in [0,1]
-        return torch.sigmoid(self.final(d1))
+        return torch.sigmoid(self.final(d1)) # -> (B, out_channels, 128, 128)
 
 #######################################################
 
-
 class BasicBlock(nn.Module):
-    """
-    Residual block with two conv layers and optional upsampling.
-
-    Args:
-        in_channels:  Number of input feature channels.
-        out_channels: Number of output feature channels.
-        activation:   Activation layer for post-residual (if no upsample).
-        upsample:     Upsampling layer applied when provided.
-    """
-    def __init__(self, in_channels: int, out_channels: int,
-                 activation=None, upsample=None):
+    def __init__(self, in_channels, out_channels, activation=None, upsample=None):
         super().__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels,
-                               kernel_size=5, padding=2, bias=False)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 5, padding=2, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(out_channels, out_channels,
-                               kernel_size=3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-        if activation is not None:
-            self.activation = activation
-        else:
-            # 1x1 conv for residual if channels differ
-            self.res_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
-            self.res_bn = nn.BatchNorm2d(out_channels)
         self.upsample = upsample
+        self.activation = activation or nn.ReLU(inplace=True)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if in_channels != out_channels:
+            self.res_conv = nn.Conv2d(in_channels, out_channels, 1, bias=False)
+            self.res_bn = nn.BatchNorm2d(out_channels)
+        else:
+            self.res_conv = None
+
+    def forward(self, x):
         identity = x
         out = self.relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
-        if self.upsample is not None:
-            # adjust residual and upsample
+
+        if self.res_conv:
             identity = self.res_bn(self.res_conv(identity))
-            out += identity
+
+        out += identity
+
+        if self.upsample:
             out = self.relu(out)
             out = self.upsample(out)
         else:
-            out += identity
             out = self.activation(out)
+
         return out
+
 
 class ColorizeNet(nn.Module):
     """
@@ -374,14 +366,14 @@ class ColorizeNet(nn.Module):
 
     def _make_layer(self, block, in_ch, out_ch, activation=None, upsample=None):
         layers = []
-        # first block with optional upsample
-        layers.append(block(in_ch, out_ch, upsample=upsample))
-        # second block with activation
+        layers.append(block(in_ch, out_ch, activation=None, upsample=upsample))
         layers.append(block(out_ch, out_ch, activation=activation))
         return nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.encoder(x)
         x = self.decoder(x)
+        # Upscale to match original image size
+        x = nn.functional.interpolate(x, size=(128, 128), mode='bilinear', align_corners=False)
         return x
 #######################################################
