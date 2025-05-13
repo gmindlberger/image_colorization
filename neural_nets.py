@@ -6,6 +6,8 @@ def count_params(model):
     '''
     returns the number of trainable parameters in some model
     '''
+    # requires_grad filtert nach Parametern, die aktualisiert werden sollen
+    # p.numel() gibt die Anzahl der Elemente in einem Tensor zurück
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
@@ -21,19 +23,30 @@ class ImageColorizerLAB(nn.Module):
     """
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
+        # man geht mit 1 Kanal rein und wandelt in 64-Feature maps um, mit einer Kernelgröße von 3x3, Padding hält das räumliche Maß
         self.enc1 = nn.Conv2d(in_channels, 64, kernel_size=3, padding=1)
+        # Halbieren der Bildgröße anhand der Merkmalstärke (vierteln der Pixelgröße)
+        # Man betrachtet immer 2x2 Pixel und nimmt den stärksten Wert der Merkmale raus und behält diesen
         self.pool1 = nn.MaxPool2d(2, 2)
         self.enc2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(2, 2)
         self.enc3 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
 
+        # upsample vergrößert die Bildgröße wieder (x2 in dem Fall). Modus nearest Neighbor -> es wird der nächstgelegene Pixel kopiert.
         self.up1   = nn.Upsample(scale_factor=2, mode='nearest')
+        # Die eigentliche Rekonstruktion der Merkmale geschieht mithilfe des Convolution Layers. (Feature maps werden wieder angewendet,
+        # übergänge geglättet, details ergänzt -> durch ersetzen der kopierten Pixel)
+        # Anschließend noch eine reduzierung der Merkmale auf 128
         self.dec1  = nn.Conv2d(256, 128, kernel_size=3, padding=1)
         self.up2   = nn.Upsample(scale_factor=2, mode='nearest')
+        #Kein weiteres Upsample mehr nötig, da Zielgröße schon erreicht.
         self.dec2  = nn.Conv2d(128, 64, kernel_size=3, padding=1)
         self.final = nn.Conv2d(64, out_channels, kernel_size=3, padding=1)
 
+        # Aktivierungsfunktiion Relu -> Weil? Relu Beste.
+        # -> Negative Werte auf 0, fügt eine gewisse nichtlineareität hinzu um Komplexe Muster zu lernen
         self.relu = nn.ReLU(inplace=True)
+        # Tanh erzwinkt die Ausgabe der Werte zwischen -1 und 1, Ausreißer werden gebremst / ist die Ausgabe
         self.tanh = nn.Tanh()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -77,6 +90,7 @@ class ImageColorizer(nn.Module):
         self.final = nn.Conv2d(64, out_channels, kernel_size=3, padding=1)
         # Activations
         self.relu    = nn.ReLU(inplace=True)
+        # Sigmoid für output in [0,1]
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -122,6 +136,7 @@ class ImageSuperRes(nn.Module):
         self.enc4 = nn.Conv2d(256,          512, 3, padding=1)  # (B,512,H/4,W/4)
 
         # Decoder
+        # ConvTranspose2d: Upsampling + Convolution -> Nicht in einem Schritt nötig
         self.up1 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)  # (B,256,H/2,W/2)
         self.dec1 = nn.Conv2d(256, 256, 3, padding=1)
         self.up2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)  # (B,128,H,   W)
@@ -332,7 +347,6 @@ class BasicBlock(nn.Module):
             out = self.activation(out)
 
         return out
-
 
 class ColorizeNet(nn.Module):
     """

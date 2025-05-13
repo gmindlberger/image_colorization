@@ -9,7 +9,7 @@ from dataloader import ImageColorizerDataset
 from neural_nets import ImageColorizerLAB
 
 # Dieser Grid Search code ist im Grunde nur eine Kopie des OriginalCodes in AutoColorization.ipynb
-# Allerdings ist es bewusst vollständig ausgelagert - Dementsprechend auch hier keine weiteren Details
+# Allerdings ist es bewusst vollständig ausgelagert - Dementsprechend auch hier keine weiteren Details zum Code per se.
 
 def run_grid_search(
 
