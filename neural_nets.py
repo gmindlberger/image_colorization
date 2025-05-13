@@ -2,6 +2,9 @@ import torch.nn as nn
 import torch
 import torchvision.models as models
 
+
+# Initial Conv layer dait die Rohdaten in Feature maps in Feature Maps geschrieben werden.
+
 def count_params(model):
     '''
     returns the number of trainable parameters in some model
@@ -213,6 +216,7 @@ class UNet(nn.Module):
         e2 = self.enc2(self.pool(e1)) # -> (B, 128, 64, 64)
         e3 = self.enc3(self.pool(e2)) # -> (B, 256, 32, 32)
         b  = self.bottleneck(self.pool(e3)) # -> (B, 512, 16, 16)
+        #cat fürt die Skip connection aus // Upsampling zum Bild vergrößern
         d3 = self.dec3(torch.cat([self.up(b), e3], dim=1)) # (B, 256, 32, 32)
         d2 = self.dec2(torch.cat([self.up(d3), e2], dim=1)) # (B, 128, 64, 64)
         d1 = self.dec1(torch.cat([self.up(d2), e1], dim=1)) # (B, 64, 128, 128)
@@ -224,6 +228,7 @@ class UNet(nn.Module):
 class ResBlock(nn.Module):
     """
     Residual block with two conv layers and a skip connection.
+    Der Block lernt nicht direkt eine komplette Transformation, sondern er lernt eine Abweichung (residual) von der Eingabe,
     """
     def __init__(self, channels: int):
         super().__init__()
@@ -237,7 +242,7 @@ class ResBlock(nn.Module):
         identity = x
         out = self.relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
-        out += identity
+        out += identity #Skip connection behält allerdings die Informationen bei, nicht wie bei UNet -> besonders bei stark verdichteten Features relevant
         return self.relu(out)
 
 class UNetRes(nn.Module):
@@ -316,6 +321,7 @@ class BasicBlock(nn.Module):
     def __init__(self, in_channels, out_channels, activation=None, upsample=None):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, 5, padding=2, bias=False)
+        # Batchnorm2d normalisiert die Ausgaben der Convolution Layer, dann ist Mittelwert um 0 mit Standardabweichung 1
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=False)
@@ -366,10 +372,13 @@ class ColorizeNet(nn.Module):
         resnet18 = models.resnet18(pretrained=True)
         # adapt first conv to in_channels
         weight = resnet18.conv1.weight.mean(dim=1, keepdim=True)
+        # initial conv layer
         resnet18.conv1 = nn.Conv2d(in_channels, 64, kernel_size=7,
                                    stride=2, padding=3, bias=False)
+        # setzt weights bei uns
         resnet18.conv1.weight = nn.Parameter(weight)
-        # use layers up to layer2
+        # use layers up to layer2 -> Nimmt die ersten 6 Layer (conv1 -> layer2) und listet sie sequentiell auf.
+        # Der Encoder führt diese layer dann aus.
         self.encoder = nn.Sequential(*list(resnet18.children())[:6])
         # decoder blocks
         self.decoder = nn.Sequential(
